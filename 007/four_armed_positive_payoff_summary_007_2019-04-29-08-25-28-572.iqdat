@@ -1,0 +1,2 @@
+script.startdate	script.starttime	script.subjectid	script.groupid	script.elapsedtime	computer.platform	values.completed	values.TotaltrialCount	values.noResponseCount	expressions.propNoResponses	expressions.prop_highestPayOff	expressions.prop_exploitative
+042919	13:55:28	007	1	883144	win	0	150	4	0.0266666666666666684	0.8424657534246575707	0.8561643835616438158
