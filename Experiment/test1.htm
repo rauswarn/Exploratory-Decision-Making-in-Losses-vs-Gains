@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<title>FILL</title>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script>
+
+		$( document ).ready(function() {		
+			$("#printButton").click(function(){
+				window.print();
+			});				
+		})
+	</script>
+	
+<style>
+.center {
+	text-align: center;
+	}
+.left {
+	text-align: left;
+	}
+body {
+    background-color: white;
+    font-family: arial;
+    color:black;	
+    font-size: 3.5vh;
+}
+h1 {
+    font-size: 5vh;
+}
+p {
+    font-size: 3.5vh;
+}
+p.bigger {
+    font-size: 4vh;
+}	
+li {
+    font-size: 3.5vh;
+}
+.blue {
+	color: blue;
+}	
+.yellow {
+	color: yellow;
+}
+.red {
+	color: red;
+}
+.green {
+	color: lightgreen;
+}
+
+</style>	
+	
+</head>
+
+<body>
+	<div class = "center">
+		<h1>Now the actual game phase will begin.</h1>
+	</div>
+	<div class = "left">
+		<p>The payoffs of the four slots will be different for the game phase but the game set-up is otherwise the same:
+		Each slot is tied to different payoffs that fluctuate from trial to trial.</p>
+		<p>You will play 2 rounds of 150 trials.</p>
+		<p><b>The higher your number of points at the very end, the more money you will earn.</b></p>
+		<p><u>Remember</u>: You <i>only</i> have <%parameters.selectionTimeout/1000%>s to make your choice. 
+		If you are too slow, a red <span class="red">X</span> is flashed onto the screen to let you know that you missed your chance 
+		to get more points during this trial.</p>
+		<p>Press Start to start the game!</p>
+
+	</div>
+
+
+</body>
+
+</html>

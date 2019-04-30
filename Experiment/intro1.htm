@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<title>FILL</title>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script>
+
+		$( document ).ready(function() {		
+			$("#printButton").click(function(){
+				window.print();
+			});				
+		})
+	</script>
+	
+<style>
+.center {
+	text-align: center;
+	}
+.left {
+	text-align: left;
+	}
+body {
+    background-color: white;
+    font-family: arial;
+    color:black;	
+    font-size: 3.5vh;
+}
+h1 {
+    font-size: 5vh;
+}
+p {
+    font-size: 3.5vh;
+}
+p.bigger {
+    font-size: 4vh;
+}	
+li {
+    font-size: 3.5vh;
+}
+.blue {
+	color: blue;
+}	
+.yellow {
+	color: yellow;
+}
+.red {
+	color: red;
+}
+.green {
+	color: lightgreen;
+}
+
+</style>	
+	
+</head>
+
+<body>
+	<div class = "left">
+		<h1>Welcome!</h1>
+		<p>In this game, you get to choose between 4 different slot machines (each slot is represented by a square in the colors 
+		red, green, blue and yellow).</p>
+	
+	</div>
+	<div class = "center">
+		<img src="slots.png" style="height:30vh"/>	
+		<p>Each slot is tied to different payoffs that fluctuate from trial to trial:<br><i>the payoffs can go up or down.</i></p><br>		
+		<p class="bigger"><b>Your task is to <u>maximize</u> your payoffs.</b><br>
+	</div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1105 @@
+﻿<usermanual>
+						
+										Four Armed Bandit Task
+SCRIPT INFO
+
+Script Author: Katja Borchert, Ph.D. (katjab@millisecond.com) for Millisecond Software, LLC
+Date: 02-14-2018
+last updated: 11-14-2018 by K.Borchert (katjab@millisecond.com) for Millisecond Software LLC
+
+Script Copyright © 11-14-2018 Millisecond Software
+
+
+BACKGROUND INFO 
+
+											*Purpose*
+This script implements a 'Four Armed Bandit Task' similarly to the one described in:
+
+Daw, N.D., O'Doherty, J.P., Dayan, P., Seymour, B. & Dolan, R.J. (2006).
+Cortical substrates for exploratory decisions in humans.
+Nature. 2006 June 15; 441(7095): 876–879.
+
+and Supplemental Materials (Refer to Web version on PubMed Central for supplementary material)
+
+
+											  *Task*
+Participants have to choose between four slots that are each tied to different payoffs.
+The payoffs of each slot fluctuate from trial to trial. Specifically,
+the payoffs for each slot are drawn from a Gaussian distribution (standard deviation = 4)
+around mean M, rounded to the nearest integer (enforced range 1-100).
+At the beginning of each selection trial, the mean for each slot diffuses in a decaying 
+Gaussian random walk and the new payoffs are drawn from their respective (updated) distributions (Daw et al, 2006).
+Participants are instructed to maximize their payoffs.
+
+
+DATA FILE INFORMATION: 
+The default data stored in the data files are:
+
+(1) Raw data file: 'fourarmedbandittask_raw*.iqdat' (a separate file for each participant)*
+
+build:							Inquisit build
+computer.platform:				the platform the script was run on
+date, time, subject, group:		date and time script was run with the current subject/groupnumber 
+blockcode, blocknum:			the name and number of the current block
+trialcode, trialnum: 			the name and number of the currently recorded trial
+									(Note: not all trials that are run might record data; by default data is collected unless /recorddata = false is set for a particular trial/block) 
+
+/countRounds:					counts the number of rounds played
+/TotaltrialCount:				running count of all test trials run across rounds
+/trialCount_perRound: 			running count of test trials per round
+/noResponseCount:				running count of all test trials where no selection was made (in time) across rounds									
+									
+response:						the participant's response
+								trial.selection: the selected slot
+latency: 						the response latency (in ms); measured from:
+/selectionRT:					the latency (ms) of selecting the current slot; measured from onset of all four 'slots'
+/selectedSlot:					the selected slot: 1, 2, 3, 4
+
+/choice:						0 = no selection made (timed-out)
+								1 = exploitative selection made (participant selected the slot with the highest known payoff at this point)
+								2 = exploratory selection (participant selected an slot that did not have the highest known payoff at this point)
+									Note: values.choice is determined in 'trial.selection' based on the last known payoffs seen before making the choice
+
+/currenthighestSeenPayOffSlot:	the slot that has the currently known highest payoff of the four options
+/currenthighestSeenPayOff:		the currently known highest payoff
+								Note: 
+								trial.selection stores the value that is known when the selection is made (but before the result has been revealed)
+								trial.iti stores the potentially updated value that is known at the end of the trial
+						
+/lastSeenPayOff1:				stores the last seen payOff for 'slot1'
+/lastSeenPayOff2:				stores the last seen payOff for 'slot2'
+/lastSeenPayOff3:				stores the last seen payOff for 'slot3'
+/lastSeenPayOff4:				stores the last seen payOff for 'slot4'
+									Note: values.currenthighestSeenPayOff is calculated as the highest of these 4 values
+									Note: all 'lastSeenPayOffs' are updated at the END of each trial sequence
+									trial.selection: stores the known payOffs at the start of the trial sequence
+									trial.iti: stores the known payOffs at the end of the trial sequence
+
+/total:							the total points won
+/currentPayoff:					stores the current payoff based on the selected slot
+
+/highestPayOffSelected:			1 = the slot with the currently highest payoff was selected
+								2 = an slot with lesser payoff was selected
+								0 = no choice was made
+									Note: at time of making their choice, participants were not aware of any potential changes in relative 
+									payoffs.
+
+/currentHighestPayOffSlot:		the slot with the currently highest payoff (is not necessarily known by player)
+/payOff1:						current payoff for selecting 'slot1'			
+/payOff2:						current payoff for selecting 'slot2'
+/payOff3:						current payoff for selecting 'slot3'
+/payOff4:						current payoff for selecting 'slot4'
+
+/mean:							helper variable to calculate the current means for the four slots
+/mean1:							the current mean payoff for 'slot1'; used to calculate payoff1
+/mean2:							the current mean payoff for 'slot2'; used to calculate payoff2
+/mean3:							the current mean payoff for 'slot3'; used to calculate payoff3
+/mean4:							the current mean payoff for 'slot4'; used to calculate payoff4
+
+
+(2) Summary data file: 'fourarmedbandittask_summary*.iqdat' (a separate file for each participant)*
+
+script.startdate:				date script was run
+script.starttime:				time script was started
+script.subjectid:				subject id number
+script.groupid:					group id number
+script.elapsedtime:				time it took to run script (in ms)
+computer.platform:				the platform the script was run on
+/completed:						0 = script was not completed (prematurely aborted); 1 = script was completed (all conditions run)
+
+/TotaltrialCount:				number of test trials run across rounds
+/noResponseCount:				number of test trials where no selection was made (in time) across rounds
+/propNoResponses:				proportion no responses (no choice was made)
+/prop_highestPayOff:			proportion highest payOff option selected (of all trials in which a choice was made)
+/prop_exploitative:				proportion exploitative choices (of all trials in which a choice was made)
+									Note: 'exploitative' selection (in this script): participant selected the slot with the highest known payoff at this point
+
+* separate data files: to change to one data file for all participants (on Inquisit Lab only), go to section
+"DATA" and follow further instructions
+
+
+EXPERIMENTAL SET-UP
+
+(1) Demo: 5 trials (runs with different payoff values than test trials)
+(2) Test: 2 rounds with 150 trials each; break in between
+
+Trial Set-Up:
+
+4 slots: represented by a red, green, blue and yellow box; 
+slots are selected by mouse click
+
+Trial Sequence:
+slot selection (max. 1500ms) -> animated slot (3000ms) -> reveal of selected slot's payoff (1000ms) -> blank screen (2000ms)
+(if no slot is selected within 1500ms -> error feedback (4200ms) -> blank screen (2000ms))
+
+PayOff Calculations:
+PayOffs for each slot calculated at beginning of each trial.selection (with i = 'slots' 1-4):
+
+payOff(i) = round(randgaussian(values.newmean(i), 4)); rounded to the nearest integer 
+with Max PayOff = 100 and Min PayOff = 1 (see Daw et al, 2006, Supplementary Methods),
+
+additional constraint implemented in this script: the calculated payOffs have to be different from each other
+(new payoffs are calculated based on the same means if two of the payoffs end up being the same)
+
+with:
+newmean(i) = 0.9836*previousmean(i) + (1-0.9836)*50 + randgaussian(0, 2.8) (see Daw et al, 2006 for further explanation, Supplementary Methods)
+
+Notes: 
+* function randgaussian(mean, standarddeviation) samples a value from the normal distribution with the given mean
+and standarddeviation
+* initial means of 20, 40, 60, 80 (editable parameters) are assigned randomly to the four 'slots'
+
+STIMULI
+provided by Millisecond Software - can be edited under section Editable Stimuli
+
+INSTRUCTIONS
+provided by Millisecond Software (not original to Daw et al, 2006)- can be edited under section Editable Instructions
+* main instructions are provided via *.htm files. To edit instructions replace existing htm files or edit 
+provided ones using simple text editors such as Notepad (win) or TextEdit (Mac)
+
+EDITABLE CODE:
+check below for (relatively) easily editable parameters, stimuli, instructions etc. 
+Keep in mind that you can use this script as a template and therefore always "mess" with the entire code to further customize 
+your experiment.
+
+The parameters you can change are:
+
+/skipTotal:						true (1): the total points won are NOT presented on screen (default)
+								false (0): the total points won are presented on screen 
+								
+/startMean1:					the first mean value to use to calculate payoffs for the first trial (default: 20)
+/startMean2:					the second mean value to use to calculate payoffs for the first trial (default: 40)
+/startMean3:					the third mean value to use to calculate payoffs for the first trial (default: 60)
+/startMean4:					the fourth mean value to use to calculate payoffs for the first trial (default: 80)
+								Note: these means are randomly assigned to 'slot1'-'slot4'
+
+/slotSize:						the proportional size of the four 'slots' (proportional to canvas) (default: 40%)
+
+/selectionTimeout:				the response timeout (in ms) for making a choice (default: 1500ms)
+/timeoutWarningDuration:		the duration (in ms) of the red X to signal a no response timeout (default: 4200ms)
+/animationDuration:				the duration (in ms) of the animated slot (the wait time until result is revealed) (default: 3000ms)
+/outcomeDuration:				the duration (in ms) of the result (the reveal of the points won) (default: 1000ms)
+/iti:							the intertrial interval in ms (default: 2000)
+								Note: in this script, the iti is fixed (compare to: Daw et al, 2006, Supplementary Methods)
+/breakDuration:					btw. round rest duration (in ms)  (default: 60000ms)
+/readyDuration:					'get ready' duration (in ms) (default: 2000ms)
+
+</usermanual>
+
+
+**************************************************************************************************************
+**************************************************************************************************************
+	EDITABLE PARAMETERS: change editable parameters here
+**************************************************************************************************************
+**************************************************************************************************************
+
+<parameters>
+/skipTotal = true
+
+/numberOfTestTrials_game = 150
+/countRounds = 1
+
+/startMean1 = -20
+/startMean2 = -40
+/startMean3 = -60
+/startMean4 = -80
+
+/slotSize = 35%
+
+/selectionTimeout = 1500
+/timeoutWarningDuration = 4200
+/animationDuration = 2000
+/outcomeDuration = 1000
+/iti = 2000
+/breakDuration = 60000
+/readyDuration = 2000
+</parameters>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	EDITABLE STIMULI
+**************************************************************************************************************
+**************************************************************************************************************
+
+<item slots>
+/1 = "redsquare.png"
+/2 = "greensquare.png"
+/3 = "bluesquare.png"
+/4 = "yellowsquare.png"
+</item>
+
+
+<item animatedImage>
+/1 = "movingStripes4.gif"
+</item>
+
+
+**************************************************************************************************************
+**************************************************************************************************************
+	EDITABLE INSTRUCTIONS: change instructions here
+**************************************************************************************************************
+**************************************************************************************************************
+<instruct>
+/ fontstyle = ("Arial", 3.5%, true, false, false, false, 5, 1)
+/ txcolor = black
+/ screencolor = white
+/ windowsize = (100%, 100%)
+/ finishlabel = "START"
+</instruct>
+
+<htmlpage intro1>
+/ file = "intro1.htm"
+</htmlpage>
+
+<htmlpage intro2>
+/ file = "intro2.htm"
+</htmlpage>
+
+<htmlpage test>
+/ file = "test1.htm"
+</htmlpage>
+
+<page end>
+You have reached the end of the task.
+^^Thank you!
+</page>
+
+<item payOffFeedback>
+/1 = "<%values.currentPayoff%> 
+points"
+</item>
+
+<text getReady>
+/ items = ("Get Ready")
+/ fontstyle = ("Courier New", 5%, true, false, false, false, 5, 1)
+/ position = (50%, 50%)
+/ size = (80%, 5%)
+/ vjustify = center
+/ hjustify = center
+</text>
+
+
+<text noResponseFeedback>
+/ items = ("X")
+/ fontstyle = ("Arial", 30%, true, false, false, false, 5, 1)
+/ position = (50%, 50%)
+/ size = (80%, 50%)
+/ vjustify = center
+/ hjustify = center
+/ txcolor = red
+</text>
+
+<text total>
+/ items = ("Total Points: <%values.total%>")
+/ fontstyle = ("Arial", 4%, true, false, false, false, 5, 1)
+/ position = (50%, 50%)
+/ size = (80%, 5%)
+/ vjustify = center
+/ hjustify = center
+/ erase = false
+</text>
+
+<text break>
+/ items = ("Take a break")
+/ fontstyle = ("Arial", 10%, true, false, false, false, 5, 1)
+/ position = (50%, 50%)
+/ size = (80%, 12%)
+/ vjustify = center
+/ hjustify = center
+</text>
+
+<text summary>
+/ items = ("Thank you!
+
+your final points: <%values.total%>")
+/ fontstyle = ("Arial", 8%, true, false, false, false, 5, 1)
+/ position = (50%, 30%)
+/ size = (80%, 80%)
+/ vjustify = center
+/ hjustify = center
+</text>
+
+<text finish>
+/ items = ("FINISH")
+/ fontstyle = ("Arial", 3%, true, false, false, false, 5, 1)
+/ position = (50%, 80%)
+/ size = (30%, 10%)
+/ vjustify = center
+/ hjustify = center
+/ txbgcolor = black
+/ txcolor = white
+</text>
+
+
+****************************************************************************************************
+general instruction expressions: adjust the instruction text depending on device used to run script
+****************************************************************************************************
+<expressions>
+/buttoninstruct1 = if (computer.touch && !computer.haskeyboard) {
+"finger";} else {"mouse";}
+</expressions>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	EDITABLE LISTS: change editable lists here
+**************************************************************************************************************
+**************************************************************************************************************
+
+**************************************************************************************************************
+				!!!REMAINING CODE: Customize after careful consideration only!!!
+**************************************************************************************************************
+
+
+**************************************************************************************************************
+**************************************************************************************************************
+	DEFAULTS
+**************************************************************************************************************
+**************************************************************************************************************
+script requires Inquisit 5.0.11.0 or higher
+
+<defaults>
+/canvasaspectratio = (4,3)
+/minimumversion = "5.0.11.0"
+/ fontstyle = ("Arial", 3%, false, false, false, false, 5, 1)
+/txbgcolor = white
+/ txcolor = black
+/ screencolor = white
+/ inputdevice = mouse
+</defaults>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	DATA
+**************************************************************************************************************
+**************************************************************************************************************
+
+Note: data file explanations under User Manual Information at the top
+
+To change from one data file per participant to one data file for all participants, set
+/separatefiles = false
+
+***********************
+raw data file
+***********************
+<data>
+/ separatefiles = true
+/ columns = (
+build, computer.platform, date, time, subject, group, blockcode, blocknum, trialcode, trialnum,
+values.countRounds, values.TotaltrialCount, values.trialCount_perRound, values.noResponseCount,
+response, latency, values.selectionRT,
+
+values.selectedSlot, values.choice, values.currenthighestSeenPayOffSlot, 
+values.currenthighestSeenPayOff, values.lastSeenPayOff1, values.lastSeenPayOff2,
+values.lastSeenPayOff3, values.lastSeenPayOff4, 
+values.total,values.currentPayoff,
+values.highestPayOffSelected, values.currentHighestPayOffSlot, values.payOff1, values.payOff2, values.payOff3, values.payOff4,
+values.mean1, values.mean2, values.mean3, values.mean4)
+</data>
+
+***********************
+summary data file
+***********************
+<summarydata>
+/columns = (script.startdate, script.starttime, script.subjectid, script.groupid, script.elapsedtime, computer.platform, values.completed,
+values.TotaltrialCount, values.noResponseCount, expressions.propNoResponses, expressions.prop_highestPayOff, expressions.prop_exploitative)
+/ separatefiles = true
+</summarydata>
+
+
+**************************************************************************************************************
+**************************************************************************************************************
+	VALUES: automatically updated
+**************************************************************************************************************
+**************************************************************************************************************
+                                    
+/completed:				0 = script was not completed; 1 = script was completed (all conditions run)
+
+/mean:					helper variable to calculate the current means for the four slots
+/mean1:					the current mean payoff for 'slot1'; used to calculate payoff1
+/mean2:					the current mean payoff for 'slot2'; used to calculate payoff2
+/mean3:					the current mean payoff for 'slot3'; used to calculate payoff3
+/mean4:					the current mean payoff for 'slot4'; used to calculate payoff4
+
+/total:					the total points won
+
+/selectedSlot:			the selected slot: 1, 2, 3, 4
+/selectionRT:			the latency (ms) of selecting the current slot; measured from onset of all four 'slots'
+/currentPayoff:			stores the current payoff based on the selected slot
+/payOff1:				current payoff for selecting 'slot1'			
+/payOff2:				current payoff for selecting 'slot2'
+/payOff3:				current payoff for selecting 'slot3'
+/payOff4:				current payoff for selecting 'slot4'
+/payOff:				helper variable to calculate the current payoff	
+/tempPayOff:			helper variable to calculate the current payoff	
+
+/currentHighestPayOffSlot:		the slot with the currently highest payoff (is not necessarily known by player)
+/currenthighestSeenPayOffSlot:	the slot that has the currently known highest payoff of the four options
+/currenthighestSeenPayOff:		the currently known highest payoff
+								Note: 
+								trial.selection stores the value that is known when the selection is made (but before the result has been revealed)
+								trial.iti stores the potentially updated value that is known at the end of the trial
+
+/choice:				0 = no selection made (timed-out)
+						1 = exploitative selection made (participant selected the slot with the highest known payoff at this point)
+						2 = exploratory selection (participant selected an slot that did not have the highest known payoff at this point)
+						Note: values.choice is determined in 'trial.selection' based on the last known payoffs seen before making the choice
+
+/lastSeenPayOff1:		stores the last seen payOff for 'slot1'
+/lastSeenPayOff2:		stores the last seen payOff for 'slot2'
+/lastSeenPayOff3:		stores the last seen payOff for 'slot3'
+/lastSeenPayOff4:		stores the last seen payOff for 'slot4'
+						Note: values.currenthighestSeenPayOff is calculated as the highest of these 4 values
+						Note: all 'lastSeenPayOffs' are updated at the end of the trial
+						trial.selection: stores the known payOffs at the start of the trial
+						trial.iti: stores the known payOffs at the end of the trial
+
+
+/highestPayOffSelected:	1 = the slot with the currently highest payoff was selected
+						2 = an slot with lesser payoff was selected
+						0 = no choice was made
+						Note: at time of making their choice, participants were not aware of any potential changes in relative 
+						payoffs.
+
+
+/TotaltrialCount:		running count of all test trials run across rounds
+/trialCount_perRound: 	running count of test trials per round
+/noResponseCount:		running count of all test trials where no selection was made (in time) across rounds
+/countRounds:			counts the number of rounds played
+
+						
+<values>
+/completed = 0
+
+/mean = 0
+/mean1 = 0
+/mean2 = 0
+/mean3 = 0
+/mean4 = 0
+/prev_mean1 = 0;
+/prev_mean2 = 0;
+/prev_mean3 = 0;
+/prev_mean4 = 0;
+
+/total = 0
+
+/selectedSlot = ""
+/selectionRT = ""
+/currentPayoff = 0
+/payOff1 = 0
+/payOff2 = 0
+/payOff3 = 0
+/payOff4 = 0
+/payOff = 0
+/tempPayOff = 0
+
+/currentHighestPayOffSlot = 0
+/currenthighestSeenPayOffSlot = 0
+/currenthighestSeenPayOff = 0
+
+/choice = 0
+
+/lastSeenPayOff1 = 0
+/lastSeenPayOff2 = 0
+/lastSeenPayOff3 = 0
+/lastSeenPayOff4 = 0
+
+/highestPayOffSelected = 0
+
+/TotaltrialCount = 0
+/trialCount_perRound = 0
+/noResponseCount = 0
+/countRounds = 0
+</values>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	EXPRESSIONS
+**************************************************************************************************************
+**************************************************************************************************************
+
+
+/calculateNewMeans:			calculate the new means for each slot based on:	(i = slots 1-4)	
+							newmean(i) = 0.9836*previousmean(i) + (1-0.9836)*50 + randgaussian(0, 2.8) (see Daw et al, 2006, Supplementary Methods)
+
+							Note: function randgaussian(mean, standarddeviation) samples a value from the normal distribution with the given mean
+							and standarddeviation
+
+/determineCurrentPayOffs: 	calculate the new payoffs for each slot using their calculated new means
+							payOff(i) = round(randgaussian(values.newmean(i), 4)); rounded to the nearest integer 
+							with Max PayOff = 100 and Min PayOff = 1 (see Daw et al, 2006, Supplementary Methods),
+
+							additional constraint implemented in this script: the calculated payOffs have to be different from each other
+
+
+/calculatePayOff:			helper function to calculate the payoff of a slot with given mean and standard deviation
+
+
+/determineCurrentHighestPayOffSlot:	function that determines the highest payoff slot based on the new payoff values
+/determineCurrenthighestSeenPayOffSlot: function that determines the currently highest known/seen payoff (slot) 
+										based on the 4 last seen payoff values at the end of each trial
+
+
+<expressions>
+/calculateNewMeans = {
+	values.mean1 = 0.9836*values.prev_mean1 - (1-0.9836)*50 - randgaussian(0, 2.8);
+	values.mean2 = 0.9836*values.prev_mean2 - (1-0.9836)*50 - randgaussian(0, 2.8);
+	values.mean3 = 0.9836*values.prev_mean3 - (1-0.9836)*50 - randgaussian(0, 2.8);
+	values.mean4 = 0.9836*values.prev_mean4 - (1-0.9836)*50 - randgaussian(0, 2.8);	
+};
+
+/determineCurrentPayOffs = {
+	values.mean = values.mean1;
+	expressions.calculatePayOff;
+	values.payOff1 = values.payoff;
+		
+	values.mean = values.mean2;
+	expressions.calculatePayOff;
+	values.payOff2 = values.payoff;
+	
+	values.mean = values.mean3;
+	expressions.calculatePayOff;
+	values.payOff3 = values.payoff;
+	
+	values.mean = values.mean4;
+	expressions.calculatePayOff;
+	values.payOff4 = values.payoff;	
+	
+	if (values.payOff1 == values.payOff2 || values.payOff1 == values.payOff3 || values.payOff1 == values.payOff4 ||
+	values.payOff2 == values.payOff3 || values.payOff2 == values.payOff4 || values.payOff3 == values.payOff4){
+		expressions.determineCurrentPayOffs;
+	};
+}
+
+/calculatePayOff = {
+	values.tempPayOff = round(randgaussian(values.mean, 4));
+	if (values.tempPayOff > -1){
+		values.payoff = -1;
+	} else if (values.tempPayOff < -100){
+		values.payoff = -100;
+	} else {
+		values.payoff = values.tempPayOff;
+	}
+};
+
+
+/determineCurrentHighestPayOffSlot = {
+	if (max(values.payOff1, values.payOff2, values.payOff3, values.payOff4) == values.payOff1){
+		values.currentHighestPayOffSlot = 1;
+	} else if  (max(values.payOff1, values.payOff2, values.payOff3, values.payOff4) == values.payOff2){
+		values.currentHighestPayOffSlot = 2;
+	} else if  (max(values.payOff1, values.payOff2, values.payOff3, values.payOff4) == values.payOff3){
+		values.currentHighestPayOffSlot = 3;
+	} else if  (max(values.payOff1, values.payOff2, values.payOff3, values.payOff4) == values.payOff4){
+		values.currentHighestPayOffSlot = 4;
+	};
+}
+/determineCurrenthighestSeenPayOffSlot = {
+	values.currenthighestSeenPayOff = max(values.lastSeenPayOff1, values.lastSeenPayOff2, values.lastSeenPayOff3, values.lastSeenPayOff4);
+	if (values.currenthighestSeenPayOff == values.lastSeenPayOff1){
+		values.currenthighestSeenPayOffSlot = 1;
+	} else if (values.currenthighestSeenPayOff == values.lastSeenPayOff2){
+		values.currenthighestSeenPayOffSlot = 2;
+	} else if (values.currenthighestSeenPayOff == values.lastSeenPayOff3){
+		values.currenthighestSeenPayOffSlot = 3;
+	} else if (values.currenthighestSeenPayOff == values.lastSeenPayOff4){
+		values.currenthighestSeenPayOffSlot = 4;
+	};
+}
+</expressions>
+
+/propNoResponses:			proportion no responses (no choice was made)
+/prop_highestPayOff:		proportion highest payOff option selected (of all trials in which a choice was made)
+/prop_exploitative:			proportion exploitative choices (of all trials in which a choice was made)
+
+<expressions>
+/propNoResponses = values.noResponseCount/(values.TotaltrialCount)
+/prop_highestPayOff = list.highestPayOffchoices.mean
+/prop_exploitative = list.exploitativeChoices.mean
+</expressions>
+
+
+**************************************************************************************************************
+**************************************************************************************************************
+	INSTRUCTIONS
+**************************************************************************************************************
+**************************************************************************************************************
+
+
+
+*************************************
+General Helper Instruction Trials/Blocks
+*************************************
+
+This trial is used when participants are asked to place their fingers on specific response
+buttons. On the touchscreen, this trial presents the (inactive) response buttons to the participants.
+<trial getReady>
+/ stimulusframes = [1 = getReady]
+/ trialduration = parameters.readyDuration
+/ beginresponsetime = parameters.readyDuration
+/ errormessage = false
+/ recorddata = false
+</trial>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	STIMULI
+**************************************************************************************************************
+**************************************************************************************************************
+
+<picture slot1>
+/ items = slots
+/ select = 1
+/ size = (parameters.slotSize, parameters.slotSize)
+/ vposition = 25%
+/ hposition = 30%
+/ erase = false
+</picture>
+
+<video slot1_animation>
+/ items = animatedImage
+/ select = 1
+/ size = (parameters.slotSize*0.9, parameters.slotSize*0.9)
+/ vposition = picture.slot1.vposition
+/ hposition = picture.slot1.hposition
+/ loop = true
+/ erase = false
+</video>
+
+<text slot1_result>
+/items = payOffFeedback
+/ select = 1
+/ fontstyle = ("Arial", 5%, false, false, false, false, 5, 1)
+/ vjustify = center
+/ hjustify = center
+/ vposition = picture.slot1.vposition
+/ hposition = picture.slot1.hposition
+/ erase = false
+/ size = (parameters.slotSize * 0.75 * 0.9, parameters.slotSize*0.9)
+</text>
+
+
+<trial debug>
+/ stimulusframes = [1 = slot1, slot1_result]
+/ validresponse = (slot1)
+</trial>
+
+
+<picture slot2>
+/ items = slots
+/ select = 2
+/ size = (parameters.slotSize, parameters.slotSize)
+/ vposition = 25%
+/ hposition = 70%
+/ erase = false
+</picture>
+
+<video slot2_animation>
+/ items = animatedImage
+/ select = 1
+/ size = (parameters.slotSize*0.9, parameters.slotSize*0.9)
+/ vposition = picture.slot2.vposition
+/ hposition = picture.slot2.hposition
+/ loop = true
+</video>
+
+<text slot2_result>
+/items = payOffFeedback
+/ select = 1
+/ fontstyle = ("Arial", 5%, false, false, false, false, 5, 1)
+/ vjustify = center
+/ hjustify = center
+/ vposition = picture.slot2.vposition
+/ hposition = picture.slot2.hposition
+/ erase = false
+/ size = (parameters.slotSize * 0.75 * 0.9, parameters.slotSize*0.9)
+</text>
+
+<picture slot3>
+/ items = slots
+/ select = 3
+/ size = (parameters.slotSize, parameters.slotSize)
+/ vposition = 75%
+/ hposition = 70%
+/ erase = false
+</picture>
+
+<video slot3_animation>
+/ items = animatedImage
+/ select = 1
+/ size = (parameters.slotSize*0.9, parameters.slotSize*0.9)
+/ vposition = picture.slot3.vposition
+/ hposition = picture.slot3.hposition
+/ loop = true
+</video>
+
+<text slot3_result>
+/items = payOffFeedback
+/ select = 1
+/ fontstyle = ("Arial", 5%, false, false, false, false, 5, 1)
+/ vjustify = center
+/ hjustify = center
+/ vposition = picture.slot3.vposition
+/ hposition = picture.slot3.hposition
+/ erase = false
+/ size = (parameters.slotSize * 0.75 * 0.9, parameters.slotSize*0.9)
+</text>
+
+<picture slot4>
+/ items = slots
+/ select = 4
+/ size = (parameters.slotSize, parameters.slotSize)
+/ vposition = 75%
+/ hposition = 30%
+/ erase = false
+</picture>
+
+<video slot4_animation>
+/ items = animatedImage
+/ select = 1
+/ size = (parameters.slotSize*0.9, parameters.slotSize*0.9)
+/ vposition = picture.slot4.vposition
+/ hposition = picture.slot4.hposition
+/ loop = true
+</video>
+
+<text slot4_result>
+/items = payOffFeedback
+/ select = 1
+/ fontstyle = ("Arial", 5%, false, false, false, false, 5, 1)
+/ vjustify = center
+/ hjustify = center
+/ vposition = picture.slot4.vposition
+/ hposition = picture.slot4.hposition
+/ erase = false
+/ size = (parameters.slotSize * 0.75 * 0.9, parameters.slotSize*0.9)
+</text>
+
+
+<clock breakTimer>
+/ mode = timer
+/ txcolor = yellow
+/ txbgcolor = black
+/ timeout = parameters.breakDuration
+/ position = (50%, 70%)
+/ format = "mm:ss"
+/ fontstyle = ("Arial", 10%, true, false, false, false, 5, 1)
+/ size = (30%, 15%)
+</clock>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	LISTS	
+**************************************************************************************************************
+**************************************************************************************************************
+
+<list startValues>
+/ items = (parameters.startMean1, parameters.startMean2, parameters.startMean3, parameters.startMean4)
+/ replace = false
+/ selectionrate = always
+</list>
+
+
+
+*************************************************
+Data Lists: used for descriptive statistics
+store correct latencies/accuracy data
+fill up during runtime
+*************************************************
+
+Note: list stores 1 = highest payOff selected; 0 = otherwise
+-> Participant may not know that the highest payoff was selected
+(not considered: trials with no responses)
+<list highestPayOffchoices>
+</list>
+
+
+Note: list stores 1 = participant made an exploitative choice; 0 = participant made an exploratory choice
+(not considered: trials with no responses)
+<list exploitativeChoices>
+</list>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	TRIALS 	
+**************************************************************************************************************
+**************************************************************************************************************
+
+<trial selection>
+/ ontrialbegin = [	
+	values.trialCount_perRound += 1;
+	values.TotaltrialCount += 1;
+	
+	values.prev_mean1 = values.mean1;
+	values.prev_mean2 = values.mean2;
+	values.prev_mean3 = values.mean3;
+	values.prev_mean4 = values.mean4;
+	
+	expressions.calculateNewMeans;
+	expressions.determineCurrentPayOffs;		
+	expressions.determineCurrentHighestPayOffSlot;	
+	
+	values.currentPayoff = 0;
+
+]
+/ stimulustimes = [0 = slot1, slot2, slot3, slot4, total]
+/ validresponse = (slot1, slot2, slot3, slot4)
+/ timeout = parameters.selectionTimeout
+/ ontrialend = [
+	if (trial.selection.response == "slot1"){
+		values.selectedSlot = 1;
+		values.currentPayoff = values.payOff1;
+	} else if (trial.selection.response == "slot2"){
+		values.selectedSlot = 2;
+		values.currentPayoff = values.payOff2;
+	} else if (trial.selection.response == "slot3"){
+		values.selectedSlot = 3;
+		values.currentPayoff = values.payOff3;
+	} else if (trial.selection.response == "slot4"){
+		values.selectedSlot = 4;
+		values.currentPayoff = values.payOff4;
+	} else if (trial.selection.response == 0){
+		values.selectedSlot = 0;
+	};
+	
+	if (values.selectedSlot == 0){
+		values.choice = 0;
+		values.noResponseCount += 1;
+	} else if (values.selectedSlot != values.currenthighestSeenPayOffSlot){
+		values.choice = 2;
+		list.exploitativeChoices.appenditem(0);
+	} else {
+		values.choice = 1;	
+		list.exploitativeChoices.appenditem(1);
+	};
+	
+	values.selectionRT = trial.selection.latency;
+	values.total += values.currentPayoff;
+	
+	if (values.selectedSlot != 0){
+		if (values.selectedSlot == values.currentHighestPayOffSlot){
+			values.highestPayOffSelected = 1;
+			list.highestPayOffchoices.appenditem(1);
+		} else {
+			values.highestPayOffSelected = 2;
+			list.highestPayOffchoices.appenditem(0);			
+		};	
+	} else {
+		values.highestPayOffSelected = 0;
+	};
+
+]
+/ branch = [
+	if (values.selectedSlot == 1){
+		trial.animateslot1;
+	} else if  (values.selectedSlot == 2){
+		trial.animateslot2;
+	} else if  (values.selectedSlot == 3){
+		trial.animateslot3;
+	} else if  (values.selectedSlot == 4){
+		trial.animateslot4;
+	} else {
+		trial.timeOutFeedback;
+	};
+]
+</trial>
+
+<trial animateslot1>
+/ stimulustimes = [0 = slot1_animation, slot1]
+/ timeout = parameters.animationDuration
+/ branch = [
+	trial.slot1Result;
+]
+/ recorddata = false
+</trial>
+
+<trial slot1Result>
+/ ontrialbegin = [
+	values.lastSeenPayOff1 = values.payOff1;
+	expressions.determineCurrenthighestSeenPayOffSlot;
+]
+/ stimulustimes = [0 = clearscreen, slot1, slot2, slot3, slot4, slot1_result, total]
+/ timeout = parameters.outcomeDuration
+/ branch = [
+	trial.iti;
+]
+/ recorddata = false
+</trial>
+
+<trial animateslot2>
+/ stimulustimes = [0 = slot2_animation, slot2]
+/ timeout = parameters.animationDuration
+/ branch = [
+	trial.slot2Result;
+]
+/ recorddata = false
+</trial>
+
+<trial slot2Result>
+/ ontrialbegin = [
+	values.lastSeenPayOff2 = values.payOff2;
+	expressions.determineCurrenthighestSeenPayOffSlot;
+]
+/ stimulustimes = [0 = clearscreen, slot1, slot2, slot3, slot4, slot2_result, total]
+/ timeout = parameters.outcomeDuration
+/ branch = [
+	trial.iti;
+]
+/ recorddata = false
+</trial>
+
+<trial animateslot3>
+/ stimulustimes = [0 = slot3_animation, slot3]
+/ timeout = parameters.animationDuration
+/ branch = [
+	trial.slot3Result;
+]
+/ recorddata = false
+</trial>
+
+<trial slot3Result>
+/ ontrialbegin = [
+	values.lastSeenPayOff3 = values.payOff3;
+	expressions.determineCurrenthighestSeenPayOffSlot;
+]
+/ stimulustimes = [0 = clearscreen, slot1, slot2, slot3, slot4, slot3_result, total]
+/ timeout = parameters.outcomeDuration
+/ branch = [
+	trial.iti;
+]
+/ recorddata = false
+</trial>
+
+<trial animateslot4>
+/ stimulustimes = [0 = slot4_animation, slot4]
+/ timeout = parameters.animationDuration
+/ branch = [
+	trial.slot4Result;
+]
+/ recorddata = false
+</trial>
+
+<trial slot4Result>
+/ ontrialbegin = [
+	values.lastSeenPayOff4 = values.payOff4;
+	expressions.determineCurrenthighestSeenPayOffSlot;
+]
+/ stimulustimes = [0 = clearscreen, slot1, slot2, slot3, slot4, slot4_result, total]
+/ timeout = parameters.outcomeDuration
+/ branch = [
+	trial.iti;
+]
+/ recorddata = false
+</trial>
+
+Note: this trial presents a timeout for trials in which no response was made;
+<trial timeoutFeedback>
+/ stimulusframes = [1 = clearscreen, noResponseFeedback]
+/ trialduration = parameters.timeoutWarningDuration
+/ recorddata = false
+/ branch = [
+	trial.iti;
+]
+</trial>
+
+<trial iti>
+/ stimulusframes = [1 = clearscreen]
+/ trialduration = parameters.iti
+/ recorddata = true
+</trial>
+
+<trial break>
+/ stimulusframes = [1 = break, breakTimer]
+/ trialduration = parameters.breakDuration
+/ recorddata = false
+</trial>
+
+<trial summary>
+/ stimulusframes = [1 = summary, finish]
+/ validresponse = (finish)
+/ recorddata = false
+</trial>
+
+**************************************************************************************************************
+**************************************************************************************************************
+	BLOCKS
+**************************************************************************************************************
+**************************************************************************************************************
+
+<block demo>
+/ preinstructions = (intro1, intro2)
+/ onblockbegin = [
+	values.mean1 = -30;
+	values.mean2 = -10;
+	values.mean3 = -20;
+	values.mean4 = -40;		
+]
+/ trials = [1 = getReady; 2-6 = selection]
+</block>
+
+<block testStart>
+/ preinstructions = (test)
+/ onblockbegin = [
+	values.mean1 = list.startValues.nextvalue;
+	values.mean2 = list.startValues.nextvalue;
+	values.mean3 = list.startValues.nextvalue;
+	values.mean4 = list.startValues.nextvalue;	
+	list.exploitativeChoices.reset();
+	list.highestPayOffchoices.reset();
+	values.total = 0;	
+	values.TotaltrialCount = 0;
+	values.noResponseCount = 0;
+	values.lastSeenPayOff1 = 0;
+	values.lastSeenPayOff2 = 0;
+	values.lastSeenPayOff3 = 0;
+	values.lastSeenPayOff4 = 0;
+	values.currenthighestSeenPayOffSlot = 0;
+	values.currenthighestSeenPayOff = 0;
+]
+/ trials = [1 = getReady]
+</block>
+
+
+<block game>
+/ onblockbegin = [
+	values.countRounds += 1;
+	values.trialCount_perRound = 0;
+]
+/ trials = [1-150 = selection]
+</block>
+
+
+<block break>
+/ trials = [1 = break; 2 = getReady]
+</block>
+
+<block summary>
+/ trials = [1 = summary]
+</block>
+
+
+**************************************************************************************************************
+**************************************************************************************************************
+	EXPERIMENT 
+**************************************************************************************************************
+**************************************************************************************************************
+
+<expt>
+/ onexptbegin = [	
+	text.total.skip = parameters.skipTotal;	
+]
+/ blocks = [
+	1 = demo;
+	2 = testStart;
+	3 = game;
+	4 = break;
+	5 = game;
+	6 = summary;
+]
+/ onexptend = [
+	values.completed = 1;
+]
+</expt>
+
+**************************************************************************************************************
+												End of File
+**************************************************************************************************************

@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<title>FILL</title>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script>
+
+		$( document ).ready(function() {		
+			$("#printButton").click(function(){
+				window.print();
+			});				
+		})
+	</script>
+	
+<style>
+.center {
+	text-align: center;
+	}
+.left {
+	text-align: left;
+	}
+body {
+    background-color: white;
+    font-family: arial;
+    color:black;	
+    font-size: 3.5vh;
+}
+h1 {
+    font-size: 5vh;
+}
+p {
+    font-size: 3.5vh;
+}
+p.bigger {
+    font-size: 4vh;
+}	
+li {
+    font-size: 3.5vh;
+}
+.blue {
+	color: blue;
+}	
+.yellow {
+	color: yellow;
+}
+.red {
+	color: red;
+}
+.green {
+	color: lightgreen;
+}
+
+</style>	
+	
+</head>
+
+<body>
+	<div class="center">
+	<h1>Slot Selection</h1>
+		<img src="slots.png" style="height:30vh"/>
+		<p><i>To select the slot of your choice, use your <%expressions.buttoninstruct1%> to select one of the four squares.</i></p>		
+	</div>
+	<div class="left">
+		<p><u><b>Keep in mind</u></b>: You <i>only</i> have <%parameters.selectionTimeout/1000%>s to make your choice. 
+		If you are too slow, a red <span class="red">X</span> is flashed onto the screen to let you know that you missed your chance 
+		to get more points during this trial.</p><br>
+		<p>Press START to play a quick <b>demo game</b> so that you get familiar with the game set-up.</p>
+
+	</div>
+
+
+</body>
+
+</html>
